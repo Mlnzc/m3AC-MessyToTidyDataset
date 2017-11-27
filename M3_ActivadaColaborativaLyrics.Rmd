@@ -1,0 +1,89 @@
+---
+title: "M3. ActivadadColaborativa: Billboard"
+author: "MA"
+date: "21 de noviembre de 2017"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Librerias, echo=FALSE}
+library(gdata)
+library(knitr)
+```
+
+```{r Variables, include=FALSE}
+# Variables
+# Creacion del directorio
+dir.create("datos")
+dir.create("TidyData")
+setwd("/home/map/Documentos/bigData/modulo3/practicas_R/tareaColaborativa")
+actualFolder <- getwd()
+fileURL <- "http://stat405.had.co.nz/data/billboard.csv"
+dataSetFile <- "./datos/billboard.csv"
+dataFolder <- "./datos"
+#downloadDate
+```
+
+```{r Funtions}
+# Descarga el archivo
+getDataSet <- function(){
+  download.file(fileURL,destfile= dataSetFile)
+  downloadDate <- date()
+  downloadDate
+}
+```
+
+```{r Comprobacion, echo=TRUE}
+# Comprobacion de existenca del archivo. Si no exite se descarga 
+if (!file.exists(dataSetFile)) {
+  getDataSet()
+}
+```
+
+```{r Guardar y mostrar dataset , echo=TRUE}
+billboard <- read.csv(dataSetFile)
+#View(billboard)
+```
+
+```{r Borrado de columnas innecesarias , echo=TRUE}
+billboard <- remove.vars(billboard, c('year','date.peaked')) 
+head(billboard[1:5,1:6])
+```
+```{r Puntuacion de los 3 primeros mesess (12 semanas) , echo=TRUE}
+# Eliminanos las columnas que excedan los tres primeros meses
+billboard <- billboard[, -c(18:81)]
+# La puntuacion que este como NA La pasamos 0
+if (sum(is.na(billboard)) > 0){
+  sum(is.na(billboard))
+  billboard[is.na(billboard)] <- 0
+}
+str(billboard)
+# Cambio columna primera semana de int a numerico
+billboard$x1st.week <- as.numeric(billboard$x1st.week)
+
+# Hacer media de las puntuaciones
+billboard$mean <- rowMeans(billboard[,6:17])
+# Formateamos para que salgan solo dos decimales
+billboard$mean <- format(round(billboard$mean, 2), nsmall = 2)
+billboard <- billboard[, -c(6:17)]
+
+View(billboard)
+```
+
+```{r Renombrar variables , echo=TRUE}
+# Pasar variables a castellano 
+names(billboard) <- c("artista","cancion","duracion","genero","año","media_top_12semanas")
+View(billboard)
+```
+
+```{r Ordenar , echo=TRUE}
+billboard$media_top_12semanas <- as.numeric(billboard$media_top_12semanas)
+str(billboard)
+billboard <- billboard[order(billboard$media_top_12semanas, decreasing = TRUE),]
+View(billboard)
+write.csv(billboard, file = 'TidyData/TidyBillboard.csv')
+
+
+```
